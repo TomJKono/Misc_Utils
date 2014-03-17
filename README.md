@@ -1,7 +1,7 @@
 Misc_Utils
 ==========
 
-A collection of Bash and Python scripts to perform various small tasks
+A collection of Bash and Python scripts to perform various small tasks for DNA sequence data.
 
 Contains the following scripts:
 - Filter_VCF.py: A python script to apply arbitrary filters to a VCF file.
