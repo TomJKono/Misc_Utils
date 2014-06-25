@@ -44,10 +44,9 @@ do
 		#	We do this very ugly sed pipe sed for now, so that it leaves the word boundary
 		#	delimiters off the very end of the string
 		GREPREGIONS=`cut -d ':' -f 1 $OPTARG | tr '\n' ',' | sed -e 's/,/\\\b|/g' | sed -e 's/\\b|$//g'`
-		#	useless use of cat here - but is there another way?
 		#	This reads in the regions listed in the file, and changes
 		#	all the newlines to spaces, which samtools will parse
-		SAMREGIONS=`cat $OPTARG | tr '\n', ' '`
+		SAMREGIONS=`tr '\n' ' ' < $OPTARG`
 		#	Formatting the regions for grep
 		#GREPREGIONS=`echo $OPTARG | sed -e 's/,/\\\b|/g'`
 		#	Formatting the regions for samtools
@@ -58,12 +57,12 @@ do
 		BAMFILE=$OPTARG
 		#	The filename that will output to
 		#	replace the .bam extension with _trimmed.sam
-		OUTFILE=${OPTARG/.bam/_trimmed.sam}
+		#	We use basename, since we want just the filename and not the
+		#	directory that it is in
+		OUTFILE=`basename ${OPTARG/.bam/_trimmed.sam}`
 		;;
 	o)
 		OUTDIR=$OPTARG
-		#	create this directory if it doesn't exist
-		mkdir -p ${OUTDIR}
 		;;
 	:)
 		echo "Option -$OPTARG requires an argument!"
@@ -76,6 +75,8 @@ do
 	esac
 done
 
+#	create this directory if it doesn't exist
+mkdir -p ${OUTDIR}
 #	These are lines we always want to save
 SAVE='@PG\b|@RG\b|@HD\b|@CO\b|'
 #	Output the header 
