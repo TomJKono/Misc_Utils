@@ -42,6 +42,13 @@ with open(args.alignment, 'r') as f:
     #   Append the final seq of sequences
     sequences.append(seq)
 
+#   Run a quick check to see if the sequences are all the same length
+first_seq = len(sequences[0])
+#   True if all sequences are the same length, False otherwise
+if not all(len(i) == first_seq for i in sequences):
+    sys.stderr.write('Error! Your sequences are not all the same length! Are they aligned?\n')
+    exit(1)
+
 #   Next, we transpose the list of sequences to start removing columns
 sequences_trans = zip(*sequences)
 polymorphic = []
