@@ -30,7 +30,7 @@ with open(args.alignment, 'r') as f:
             #   If we are at the first line of the file, then we don't have
             #   any previously-parsed sequence to add
             if index != 0:
-                sequences.append(seq)
+                sequences.append(seq.upper())
             seq = ''
             name = line.strip()
             names.append(name)
@@ -40,7 +40,7 @@ with open(args.alignment, 'r') as f:
             #   which would throw off the line-by-line parsing
             seq += line.strip()
     #   Append the final seq of sequences
-    sequences.append(seq)
+    sequences.append(seq.upper())
 
 #   Run a quick check to see if the sequences are all the same length
 first_seq = len(sequences[0])
