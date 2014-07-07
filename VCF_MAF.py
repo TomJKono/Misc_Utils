@@ -1,15 +1,31 @@
 #!/usr/bin/env python
 
-#   A script to calculate the minor allele frequency in a VCF file
+#   A script to calculate the alt allele frequency in a VCF file
 #   This is useful only for a single-sample VCF, for a BSA-Seq project
 #   Uses the AD annotation from the GATK output
 
 import sys
 
+#   Build a list to start writing out
+to_write = []
+#   Start iterating through the file
 with open(sys.argv[1], 'r') as f:
     for line in f:
-        if line.startswith('#'):
+        #   ignore header lines
+        if line.startswith('##'):
             continue
+        #   This defines how many samples in the VCF
+        elif line.startswith('#CHROM'):
+            samples = line.strip().split('\t')[9:]
+            #   Create the list of sub-fields for each sample
+            sample_sub_fields = ['_AltAlleleFreq', '_ReadDepth']
+            #   And tack them together
+            per_sample = []
+            for s in samples:
+                for sb in sample_sub_fields:
+                    per_sample.append(s+sb)
+            #   Append the header to the list of data to write
+            to_write.append('SNPPos\tRefAllele\tAltAllele\t' + '\t'.join(per_sample) + '\tNotes')
         else:
             tmp = line.strip().split('\t')
             #   Parse out the relevant information
@@ -17,32 +33,47 @@ with open(sys.argv[1], 'r') as f:
             bp_pos = tmp[1]
             ref = tmp[3]
             alt = tmp[4]
-            #   Insertion? Deletion? SNP?
-            if len(ref) < len(alt):
-                notes = 'Insertion WRT ref'
-            elif len(ref) > len(alt):
-                notes = 'Deletion WRT ref'
+            filt = tmp[6]
+            sample_info = tmp[9:]
+            if 'LowQual' in filt:
+                notes = 'Low Confidence Genotype'
             else:
-                notes = 'SNP'
+                notes = ''
             format = tmp[8].split(':')
-            sample_info = tmp[9].split(':')
+            sample_genotypes = [x.split(':') for x in sample_info]
             #   check if AD is not in the format field
             #   if not, then skip it
             if 'AD' not in format:
-                continue
+                notes = 'Missing Genotype Call'
+                to_write.append('\t'.join([chromosome + ':' + bp_pos, ref, alt] + len(samples)*['NA', 'NA'] + [notes]))
             else:
+                notes = ''
                 #   Which column is the AD?
                 AD_pos = format.index('AD')
-                #   Get the allele depths
-                AD = sample_info[AD_pos].split(',')
-                #   Convert to float
-                AD_flt = [float(i) for i in AD]
-                total_depth = sum(AD_flt)
-                #   set a cutoff. Less than 10 reads -> no call
-                if total_depth < 10:
-                    continue
-                else:
-                    MAF = str(min(AD_flt)/total_depth)
-                    #   Build the string to print out
-                    to_print = '\t'.join([chromosome + ':' + bp_pos, ref, alt, MAF, str(int(total_depth)), notes])
-                    print to_print
+                #   For each sample...
+                sample_variant_info = []
+                for s in sample_info:
+                    #   If it is totall missing
+                    if s == './.':
+                        AAF = 'NA'
+                        total_depth = 'NA'
+                    else:
+                        gt = s.split(':')
+                        #   If that sample has missing information
+                        if gt[AD_pos] == '.':
+                            AAF = 'NA'
+                            total_depth = 'NA'
+                        else:
+                            #   Get the allele depths
+                            AD = gt[AD_pos].split(',')
+                            #   Convert to float
+                            AD_flt = [float(i) for i in AD]
+                            total_depth = sum(AD_flt)
+                            if total_depth == 0:
+                                AAF = '1.0'
+                            else:
+                                AAF = str(AD_flt[1]/total_depth)
+                        sample_variant_info += [str(AAF), str(total_depth)]
+                    sample_list = [chromosome + ':' + bp_pos, ref, alt] + sample_variant_info + [notes]
+                to_write.append('\t'.join(sample_list))
+print '\n'.join(to_write)
