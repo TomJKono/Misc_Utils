@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 
 #   A script to calculate the alt allele frequency in a VCF file
-#   This is useful only for a single-sample VCF, for a BSA-Seq project
+#   This is useful only for a BSA-Seq project
 #   Uses the AD annotation from the GATK output
 
 import sys
 
-#   Build a list to start writing out
-to_write = []
 #   Start iterating through the file
 with open(sys.argv[1], 'r') as f:
     for line in f:
@@ -25,7 +23,7 @@ with open(sys.argv[1], 'r') as f:
                 for sb in sample_sub_fields:
                     per_sample.append(s+sb)
             #   Append the header to the list of data to write
-            to_write.append('SNPPos\tRefAllele\tAltAllele\t' + '\t'.join(per_sample) + '\tNotes')
+            print 'SNPPos\tRefAllele\tAltAllele\t' + '\t'.join(per_sample) + '\tNotes'
         else:
             tmp = line.strip().split('\t')
             #   Parse out the relevant information
@@ -45,7 +43,7 @@ with open(sys.argv[1], 'r') as f:
             #   if not, then skip it
             if 'AD' not in format:
                 notes = 'Missing Genotype Call'
-                to_write.append('\t'.join([chromosome + ':' + bp_pos, ref, alt] + len(samples)*['NA', 'NA'] + [notes]))
+                print '\t'.join([chromosome + ':' + bp_pos, ref, alt] + len(samples)*['NA', 'NA'] + [notes])
             else:
                 notes = ''
                 #   Which column is the AD?
@@ -74,6 +72,5 @@ with open(sys.argv[1], 'r') as f:
                             else:
                                 AAF = str(AD_flt[1]/total_depth)
                         sample_variant_info += [str(AAF), str(total_depth)]
-                    sample_list = [chromosome + ':' + bp_pos, ref, alt] + sample_variant_info + [notes]
-                to_write.append('\t'.join(sample_list))
-print '\n'.join(to_write)
+                sample_list = [chromosome + ':' + bp_pos, ref, alt] + sample_variant_info + [notes]
+                print '\t'.join(sample_list)
