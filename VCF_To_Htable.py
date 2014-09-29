@@ -74,14 +74,17 @@ with open(sys.argv[1], 'r') as f:
                 alleles = call.split('/')
                 individual_call = ''
                 for x in alleles:
-                    #   cast to integer so we can use it in slicing a list
-                    c = int(x)
-                    #   if it's 0, we just tack on the reference state
-                    if c == 0:
-                        individual_call += ref_allele
+                    if x == '.':
+                        individual_call += 'N'
                     else:
-                        #   Otherwise, we use it to slice the list of alternate alleles
-                        individual_call += alt_alleles[c-1]
+                        #   cast to integer so we can use it in slicing a list
+                        c = int(x)
+                        #   if it's 0, we just tack on the reference state
+                        if c == 0:
+                            individual_call += ref_allele
+                        else:
+                            #   Otherwise, we use it to slice the list of alternate alleles
+                            individual_call += alt_alleles[c-1]
                 #   Then append the individual call to the column for the genotype matrix
                 g_column.append(individual_call)
             #   Then, append that column to the genotype matrix
