@@ -14,5 +14,7 @@ Contains the following scripts:
 - **Remove_Monomorphic.py**: Remove monomorphic sites from a FASTA alignment.
 - **Strip_BAM.sh**: Trim down a BAM file to just regions of interest. Requires [SAMTools](http://www.htslib.org).
 - **VCF_MAF.py**: Counts the number of alternate and reference reads in a VCF. Useful only for BWC's BSA project (for now)
+- **VCF_To_Htable.py**: Translates a VCF into a Hudson-like polytable. Chokes on heterozygous sites.
+- **gff_parse.py**: Python classes to try to make reading/fetching chunks of data from a GFF v3 file easier. Gets parent, child, and "sibling" features given a feature identifier.
 - **ms_FreqFilter.py**: Apply a 'discovery panel' to [ms](http://home.uchicago.edu/rhudson1/source/mksamples.html) output. Used in [Fang et al. 2013](http://www.g3journal.org/content/3/11/1945.abstract) in G3 to simulate ascertainment for a genotyping platform.
 - **transpose.sh**: Transpose a matrix.
