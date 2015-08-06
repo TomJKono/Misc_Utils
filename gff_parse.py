@@ -69,8 +69,8 @@ class GFFFeature(object):
         self.seqid = fields[0]
         self.source = fields[1]
         self.type = fields[2]
-        self.start = fields[3]
-        self.end = fields[4]
+        self.start = int(fields[3])
+        self.end = int(fields[4])
         self.score = fields[5]
         self.strand = fields[6]
         self.phase = fields[7]
@@ -120,23 +120,35 @@ class GFFHandler(object):
             Returns the parents of a feature, or raises an exception when the
             ID is not found. If the type keyword is specified, then only
             features of a certain type are returned. If there are no features
-            of the supplied type, then NoneType is returned. Defaults to
+            of the supplied type, then empty list is returned. Defaults to
             returning all parents. This will only traverse up one level.
 
         get_children(self, feat_id, type=None)
             Returns the children of a feature, or raises an exception when the
             ID is not found. If the type keyword is specified, then only child
             features of the specified type are returned. If there are no child
-            features of that type, then NoneType is returned. Defaults to
+            features of that type, then empty list is returned. Defaults to
             returning all children. This will only traverse down one level.
 
         get_siblings(self, feat_id, type=None)
             Returns the "siblings" (features that share parents), or raises an
             exception when the ID is not found. If the type keyword is
             specified, then only features of that type are returned. If there
-            are no sibling features of that type, then NoneType is returned.
+            are no sibling features of that type, then empty list is returned.
             Defaults to returning all siblings. This does not check parents
             of parents or children of children.
+
+        chrom_features(self, chrom, left, right, type=None)
+            Returns all features on the specified chromosome, or raises an
+            exception when that chromosome is not found. If the type keyword is
+            specified, then only features of that type are returned. If the
+            left keyowrd is specified, then features that have bases to the
+            _right_ of the specified base are returned. If the right keyword is
+            specified, then features with bases to the _left_ of the offset
+            are returned. These effctively limit the search to a certain
+            region. If there are no features of the specified type in the given
+            region, then empty list is returned. Defaults to all types and the
+            entire chromosome.
     """
     gff_data = []
     gff_ids = []
@@ -216,3 +228,29 @@ class GFFHandler(object):
         for p in parents:
             sibs += self.get_children(p.ID, feat_type=feat_type)
         return(sibs)
+
+    def chrom_features(self, chrom, left=None, right=None, feat_type=None):
+        targeted_features = []
+        filtered_features = []
+        for f in self.gff_data:
+            if f.seqid == chrom:
+                if feat_type:
+                    if f.type == feat_type:
+                        targeted_features.append(f)
+                else:
+                    targeted_features.append(f)
+        #   Now we go through the list of targeted features and filter based
+        #   on position
+        if left or right:
+            #   if left is not specified, set it to 0
+            if not left:
+                left = 0
+            #   Same with right, except make it huge
+            if not right:
+                right = 1e99
+            for t in targeted_features:
+                if t.end >= left or t.start <= right:
+                    filtered_features.append(t)
+        else:
+            filtered_features = targeted_features
+        return(filtered_features)
