@@ -88,6 +88,8 @@ def translate_codons(feature, sequence, alt, position):
     rc = False
     if feature.strand == -1:
         cds_positions.reverse()
+        #   We need to complement the alt state, too.
+        alt = str(Seq(alt).complement())
         rc = True
     #   Sometimes, things slip through the filter and end up here. I'm not
     #   sure what causes this, but we need to trap this. In this case, we
