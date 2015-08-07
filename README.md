@@ -12,7 +12,7 @@ Contains the following scripts:
 - **Parallel_ms.py**: Splits a big batch of [ms](http://home.uchicago.edu/rhudson1/source/mksamples.html) simulations over multiple cores to make it run in less walltime. 
 - **Plot_SFS.R**: Plot site frequency spectra.
 - **Remove_Monomorphic.py**: Remove monomorphic sites from a FASTA alignment.
-- **SNP_Effect_Predictor.py**: Predicts silent/nonsynonymous SNPs in a VCF, given a GFF and a reference assembly. Requires gff_parse.py and Biopython. [SNPEff](http://snpeff.sourceforge.net/) does this, but SNP_Effect_Predictor.py was written to work with a genome with an incomplete assembly.
+- **SNP_Effect_Predictor.py**: Predicts silent/nonsynonymous SNPs in a VCF, given a GFF and a reference assembly. Requires gff_parse.py and [Biopython](http://biopython.org/). [SNPEff](http://snpeff.sourceforge.net/) does this, but SNP_Effect_Predictor.py was written to work with a genome with an incomplete assembly.
 - **Strip_BAM.sh**: Trim down a BAM file to just regions of interest. Requires [SAMTools](http://www.htslib.org).
 - **VCF_MAF.py**: Counts the number of alternate and reference reads in a VCF. Useful only for BWC's BSA project (for now)
 - **VCF_To_Htable.py**: Translates a VCF into a Hudson-like polytable. Chokes on heterozygous sites.
