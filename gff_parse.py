@@ -96,7 +96,7 @@ class GFFFeature(object):
             elif a.startswith('Note'):
                 note = a.split('=')[1]
                 self.Note = note.split(',')
-            elif a.startsiwth('Dbxref'):
+            elif a.startswith('Dbxref'):
                 dbxref = a.split('=')[1]
                 self.Dbxref = dbxref.split(',')
             elif a.startswith('Ontology_term'):
