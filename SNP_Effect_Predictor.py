@@ -16,8 +16,6 @@ import gff_parse
 #   Biopython modules. These handle sequence objects and translations
 from Bio import SeqIO
 from Bio.Seq import Seq
-from Bio.Seq import MutableSeq
-from Bio.Alphabet import IUPAC
 from Bio.SeqFeature import SeqFeature, FeatureLocation
 
 
@@ -28,19 +26,18 @@ def read_sequence(refseq):
     ref_parser = SeqIO.parse(handle, 'fasta')
     #   And then turn the parser into a sequence dictionary
     ref_dict = SeqIO.to_dict(ref_parser)
-    return(ref_dict)
+    return ref_dict
 
 
 def read_gff(gff_file):
     """Reads and parses the GFF."""
     parsed_gff = gff_parse.GFFHandler()
     parsed_gff.gff_parse(gff_file)
-    return(parsed_gff)
+    return parsed_gff
 
 
 def build_cds_sequences(cds_chunks):
-    """Takes a list of CDS annotations and sticks them together, respecting
-    their phase fields."""
+    """Takes a list of CDS annotations and sticks them together."""
     feature_parts = []
     for c in cds_chunks:
         #   We convert all the coordinates to 0-based, since they came out of
@@ -49,28 +46,26 @@ def build_cds_sequences(cds_chunks):
         #   the start.
         start = int(c.start) - 1
         end = int(c.end)
-        #   First, we check the strand. If we are on the forward strand, then
-        #   we take the phase from the 'start' attribute. If we are on the
-        #   reverse strand, we take from the 'end' attribute
         if c.strand == '+':
-        #    start = start + int(c.phase)
             strand = 1
         elif c.strand == '-':
-        #    end = end - int(c.phase)
             strand = -1
         #   Then, we build a FeatureLocation object out of it, and give it the
         #   proper strandedness
         feature_sub = FeatureLocation(start, end)
         feature_parts.append(feature_sub)
-    #   We have to check the strand. If the strand is reverse, then we have to
-    #   reverse the order. If not, we can leave it as it
-    if strand == -1:
-        feature_parts.reverse()
+    #   Check the strand, and sort accordingly. For forward strand features,
+    #   we sort from low to high. For reverse strand features, we sort from
+    #   high to low.
+    if strand == 1:
+        feature_parts.sort(key=lambda s: s.start)
+    elif strand == -1:
+        feature_parts.sort(key=lambda s: s.start, reverse=True)
     #   And then we concatenate them all together
     joint_feature = sum(feature_parts)
     joint_feature = SeqFeature(joint_feature, type='CDS', strand=strand)
     #   Return it!
-    return(joint_feature)
+    return joint_feature
 
 
 def translate_codons(feature, sequence, alt, position):
@@ -253,7 +248,7 @@ def main():
                         ]
                         )
                     print to_print
-    return()
+    return
 
 
 main()
