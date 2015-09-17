@@ -110,8 +110,8 @@ if [[ "${DRY_RUN}" == "true" ]]
         exit 3
     else
         #   Make the directory and cd into it
-        mkdir -p "${DIR}"
-        cd "${DIR}"
+        mkdir -p ${DIR}
+        cd ${DIR}
         #   get the contents with lftp
-        lftp -c mirror "${QUERY_URL}"
+        lftp -c mirror ${QUERY_URL}
 fi
