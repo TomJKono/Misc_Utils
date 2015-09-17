@@ -21,7 +21,7 @@ current directory is used.
 Pass -h to see available options."
 
 HELP="Usage:
-$0 <Option> <Accession> [ -d DIR ]
+$0 <Option> <Accession> [ -d DIR ] [ -v ] [ -h ]
 
 Available options:
 Required:
