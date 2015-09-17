@@ -106,12 +106,12 @@ if [[ "${DRY_RUN}" == "true" ]]
         echo "The following operations will be performed:"
         echo "mkdir -p ${DIR}"
         echo "cd ${DIR}"
-        echo "lftp -c mirror ${QUERY_URL}"
+        echo "lftp -c mirror ${QUERY_URL} ."
         exit 3
     else
         #   Make the directory and cd into it
         mkdir -p ${DIR}
         cd ${DIR}
         #   get the contents with lftp
-        lftp -c mirror ${QUERY_URL}
+        lftp -c "mirror ${QUERY_URL} ."
 fi
