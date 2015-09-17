@@ -14,6 +14,7 @@ Contains the following scripts:
 - **Plot_SFS.R**: Plot site frequency spectra.
 - **Remove_Monomorphic.py**: Remove monomorphic sites from a FASTA alignment.
 - **SNP_Effect_Predictor.py**: Predicts silent/nonsynonymous SNPs in a VCF, given a GFF and a reference assembly. Requires gff_parse.py and [Biopython](http://biopython.org/). [SNPEff](http://snpeff.sourceforge.net/) does this, but SNP_Effect_Predictor.py was written to work with a genome with an incomplete assembly.
+- **SRA_Fetch.sh**: Downloads .sra files from [NCBI's Short Read Archive](http://www.ncbi.nlm.nih.gov/sra) using [LFTP](http://lftp.yar.ru/). Can fetch based on Experiment number, Run number, Sample number, or Study number.
 - **Strip_BAM.sh**: Trim down a BAM file to just regions of interest. Requires [SAMTools](http://www.htslib.org).
 - **VCF_MAF.py**: Counts the number of alternate and reference reads in a VCF. Useful only for BWC's BSA project (for now)
 - **VCF_To_Htable.py**: Translates a VCF into a Hudson-like polytable. Chokes on heterozygous sites.
