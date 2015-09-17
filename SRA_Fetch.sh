@@ -11,7 +11,7 @@ set -u
 set -o pipefail
 
 USAGE="Usage:
-$0 <Option> <Accession> [ -d DIR ]
+$0 <Option> <Accession> [ -d DIR ] [ -v ] [ -h ]
 
 Will fetch all .SRA files under the SRA accession number given by
 <Accession>. If DIR is specified, then this script will create it if it does
