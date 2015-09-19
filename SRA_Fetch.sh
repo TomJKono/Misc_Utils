@@ -107,6 +107,7 @@ if [[ "${DRY_RUN}" == "true" ]]
         echo "mkdir -p ${DIR}"
         echo "cd ${DIR}"
         echo "lftp -c mirror ${QUERY_URL} ."
+        echo "chmod -R +w ${DIR}*"
         exit 3
     else
         #   Make the directory and cd into it
@@ -114,4 +115,5 @@ if [[ "${DRY_RUN}" == "true" ]]
         cd ${DIR}
         #   get the contents with lftp
         lftp -c "mirror ${QUERY_URL} ."
+        chmod -R +w ${DIR}*
 fi
