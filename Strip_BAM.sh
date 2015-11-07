@@ -1,5 +1,9 @@
 #!/bin/bash
 
+set -e
+set -u
+set -o pipefail
+
 #	A shell script to remove all but the specified contigs or chromosomes
 #	from a given bam file. Requires samtools
 #	arguments:
@@ -74,6 +78,19 @@ do
 		;;
 	esac
 done
+
+#	Check if the bam index exists and is not empty
+BAMINDEX=${BAMFILE}.bai
+if [ ! -e "${BAMINDEX}" ] || [ ! -s "${BAMINDEX}" ]
+then
+	echo "BAM index not found; indexing..."
+	samtools index ${BAMFILE}
+#	Check if the index is older than the BAM, which is weird, but can happen
+elif [ "${BAMINDEX}" -ot 	"${BAMFILE}" ]
+then
+	echo "BAM index is older than BAM file; re-indexing..."
+	samtools index ${BAMFILE}
+fi
 
 #	create this directory if it doesn't exist
 mkdir -p ${OUTDIR}
