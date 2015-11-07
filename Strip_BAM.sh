@@ -86,7 +86,7 @@ then
 	echo "BAM index not found; indexing..."
 	samtools index ${BAMFILE}
 #	Check if the index is older than the BAM, which is weird, but can happen
-elif [ "${BAMINDEX}" -ot 	"${BAMFILE}" ]
+elif [ "${BAMINDEX}" -ot "${BAMFILE}" ]
 then
 	echo "BAM index is older than BAM file; re-indexing..."
 	samtools index ${BAMFILE}
