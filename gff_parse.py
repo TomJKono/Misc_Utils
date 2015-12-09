@@ -248,9 +248,23 @@ class GFFHandler(object):
             #   Same with right, except make it huge
             if not right:
                 right = 1e99
+            left = int(left)
+            right = int(right)
             for t in targeted_features:
-                if t.end >= left or t.start <= right:
+                if t.start in range(left, right) or t.end in range(left, right):
                     filtered_features.append(t)
         else:
             filtered_features = targeted_features
         return(filtered_features)
+
+    def overlapping_feature(self, chrom, pos, feat_type=None):
+        targeted_features = []
+        for f in self.gff_data:
+            if f.seqid == chrom:
+                if int(pos) in range(f.start, f.end):
+                    if feat_type:
+                        if f.type == feat_type:
+                            targeted_features.append(f)
+                    else:
+                        targeted_features.append(f)
+        return targeted_features

@@ -71,6 +71,6 @@ with open(sys.argv[1], 'r') as f:
                                 AAF = '1.0'
                             else:
                                 AAF = str(AD_flt[1]/total_depth)
-                        sample_variant_info += [str(AAF), str(total_depth)]
+                    sample_variant_info += [str(AAF), str(total_depth)]
                 sample_list = [chromosome + ':' + bp_pos, ref, alt] + sample_variant_info + [notes]
                 print '\t'.join(sample_list)
