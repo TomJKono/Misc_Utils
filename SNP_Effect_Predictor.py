@@ -191,10 +191,9 @@ def main():
                     continue
                 else:
                     #   Get all the CDS features that overlap the SNP
-                    overlapping_cds = gff_data.chrom_features(
+                    overlapping_cds = gff_data.overlapping_feature(
                         chrom,
-                        left=pos,
-                        right=pos,
+                        pos,
                         feat_type='CDS')
                     #   Then, we get the sequence of the contig or chromosome
                     #   with the SNP
