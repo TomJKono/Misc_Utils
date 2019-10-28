@@ -4,6 +4,7 @@ Misc_Utils
 A collection of Bash and Python scripts to perform various small tasks for DNA sequence data.
 
 Contains the following scripts:
+- **Add_ID_to_VCF.py**: Add stable identifiers to the `ID` field of a VCF.
 - **Count_Variants_Per_Contig.py**: Counts how many variants there are in each contig/chromosome in a VCF
 - **Filter_VCF.py**: Apply arbitrary filters to a VCF file.
 - **Genotype_Matrix_To_Fasta.py**: Convert a genotyping matrix to FASTA for input into [libsequence](http://molpopgen.github.io/libsequence/) tools. Because it assumes a fixed genotyping platform, it will remove monomorphic markers as well.

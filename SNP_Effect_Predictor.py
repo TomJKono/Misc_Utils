@@ -203,10 +203,11 @@ def main():
                     if overlapping_cds:
                         feat = overlapping_cds[0]
                         #   What transcript is it in?
-                        transcript_id = gff_data.get_parents(feat.ID)
+                        transcript_id = gff_data.get_parents(chrom, feat.ID)
                         transcript_id = transcript_id[0].ID
                         #   Get the full CDS
                         full_cds = gff_data.get_siblings(
+                            chrom,
                             feat.ID,
                             feat_type='CDS')
                         full_cds = build_cds_sequences(full_cds)

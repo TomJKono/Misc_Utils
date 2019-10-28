@@ -150,8 +150,12 @@ class GFFHandler(object):
             region, then empty list is returned. Defaults to all types and the
             entire chromosome.
     """
-    gff_data = []
-    gff_ids = []
+    gff_data = {
+        'obj': {},
+        'ids': {},
+        'starts': {},
+        'ends': {}
+        }
 
     def __init__(self):
         pass
@@ -167,8 +171,23 @@ class GFFHandler(object):
                     continue
                 else:
                     g = GFFFeature(line)
-                    self.gff_data.append(g)
-                    self.gff_ids.append(g.ID)
+                    if g.seqid not in self.gff_data['obj']:
+                        self.gff_data['obj'][g.seqid] = [g]
+                    else:
+                        self.gff_data['obj'][g.seqid].append(g)
+                    if g.seqid not in self.gff_data['ids']:
+                        self.gff_data['ids'][g.seqid] = [g.ID]
+                    else:
+                        self.gff_data['ids'][g.seqid].append(g.ID)
+                    if g.seqid not in self.gff_data['starts']:
+                        self.gff_data['starts'][g.seqid] = [g.start]
+                    else:
+                        self.gff_data['starts'][g.seqid].append(g.start)
+                    if g.seqid not in self.gff_data['ends']:
+                        self.gff_data['ends'][g.seqid] = [g.end]
+                    else:
+                        self.gff_data['ends'][g.seqid].append(g.end)
+        return
 
     def get_feature(self, feat_id):
         if feat_id not in self.gff_ids:
@@ -176,17 +195,17 @@ class GFFHandler(object):
         else:
             for f in self.gff_data:
                 if f.ID == feat_id:
-                    return(f)
+                    return f
 
-    def get_parents(self, feat_id, feat_type=None):
-        if feat_id not in self.gff_ids:
+    def get_parents(self, chrom, feat_id, feat_type=None):
+        if feat_id not in self.gff_data['ids'][chrom]:
             raise GFFError('ID {fid} not found in GFF!'.format(fid=feat_id))
         else:
             parents = []
             targeted_features = []
             #   We search through the list and save features that match the
             #   query ID
-            for f in self.gff_data:
+            for f in self.gff_data['obj'][chrom]:
                 if f.Parent and feat_id == f.ID:
                     if feat_type:
                         if f.type == feat_type:
@@ -196,38 +215,38 @@ class GFFHandler(object):
             #   We then search AGAIN to get the features that match the parent
             #   feature ID. This is not very efficient, but given the structure
             #   of the data, it works.
-            for f in self.gff_data:
+            for f in self.gff_data['obj'][chrom]:
                 if f.ID in parents:
                     targeted_features.append(f)
-            return(targeted_features)
+            return targeted_features
 
-    def get_children(self, feat_id, feat_type=None):
-        if feat_id not in self.gff_ids:
+    def get_children(self, chrom, feat_id, feat_type=None):
+        if feat_id not in self.gff_data['ids'][chrom]:
             raise GFFError('ID {fid} not found in GFF!'.format(fid=feat_id))
         else:
             targeted_features = []
             #   Searching for child features is easy, since we just have to see
             #   if our query ID is in the Parent GFF attributes.
-            for f in self.gff_data:
+            for f in self.gff_data['obj'][chrom]:
                 if f.Parent and feat_id in f.Parent:
                     if feat_type:
                         if f.type == feat_type:
                             targeted_features.append(f)
                     else:
                         targeted_features.append(f)
-            return(targeted_features)
+            return targeted_features
 
-    def get_siblings(self, feat_id, feat_type=None):
-        if feat_id not in self.gff_ids:
+    def get_siblings(self, chrom, feat_id, feat_type=None):
+        if feat_id not in self.gff_data['ids'][chrom]:
             raise GFFError('ID {fid} not found in GFF!'.format(fid=feat_id))
         #   This is pretty easy, too. We just take the query ID, find its
         #   parents, and then find all children of those parents. These are the
         #   "siblings"
-        parents = self.get_parents(feat_id, feat_type=feat_type)
+        parents = self.get_parents(chrom, feat_id, feat_type=feat_type)
         sibs = []
         for p in parents:
-            sibs += self.get_children(p.ID, feat_type=feat_type)
-        return(sibs)
+            sibs += self.get_children(chrom, p.ID, feat_type=feat_type)
+        return sibs
 
     def chrom_features(self, chrom, left=None, right=None, feat_type=None):
         targeted_features = []
@@ -255,16 +274,30 @@ class GFFHandler(object):
                     filtered_features.append(t)
         else:
             filtered_features = targeted_features
-        return(filtered_features)
+        return filtered_features
 
     def overlapping_feature(self, chrom, pos, feat_type=None):
-        targeted_features = []
-        for f in self.gff_data:
-            if f.seqid == chrom:
-                if int(pos) in range(f.start, f.end):
-                    if feat_type:
-                        if f.type == feat_type:
-                            targeted_features.append(f)
-                    else:
-                        targeted_features.append(f)
+        #   Find out which features have start positions before the specified
+        #   position, and which have ends after.
+        past_start = [True if pos > f else False for f in self.gff_data['starts'][chrom]]
+        before_end = [True if pos < f else False for f in self.gff_data['ends'][chrom]]
+        #   element-wise AND
+        targeted_features = [a&b for a,b in zip(past_start, before_end)]
+        #   Convert into indices
+        targeted_features = [index for index, value in enumerate(targeted_features) if value]
+        #   Then, get the correct feature types
+        if feat_type:
+            targeted_features = [
+                self.gff_data['obj'][chrom][i]
+                for i
+                in targeted_features
+                if self.gff_data['obj'][chrom][i].type == feat_type
+                ]
+        else:
+            targeted_features = [
+                self.gff_data['obj'][chrom][i]
+                for i
+                in targeted_features
+                ]
+        #   Slice them out of the gff data and return them
         return targeted_features
