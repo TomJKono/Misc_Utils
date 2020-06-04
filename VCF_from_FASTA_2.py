@@ -149,7 +149,9 @@ def adjust_indels(indels, alignment, ref_idx=0):
     by the VCF spec. This is because the reported position must be the base
     *before* any insertion/deletion polymorphism is observed."""
     spec_indels = []
-    ref_seq = str(alignment[ref_idx].seq)
+    # Remove the gaps from the reference sequnce for getting the reference base
+    # of the indel
+    ref_seq = ''.join([base for base in alignment[ref_idx].seq if base != '-'])
     for i in indels:
         spec_pos = i[0] - 1
         spec_ref = ref_seq[spec_pos]
