@@ -98,7 +98,7 @@ def extract_variants(alignment, ref_idx=0):
                 if base != '-'
                 or base != 'N']
             acs = [aln_column.count(x) for x in states]
-            afs = [c/len(non_missing) for c in acs]
+            afs = [float(c)/len(non_missing) for c in acs]
             # Re-discard the gap character, just to be sure we do not count it
             # as an alternate state
             alt_states.discard('-')
@@ -139,8 +139,10 @@ def collapse_indels(indels):
             curr_indel[1] += adj_ref
             curr_indel[2] += adj_alt
     # The way we are iterating through the indel list means that we will always
-    # leave off the last one. Append it after the loop finishes.
-    agg_indel.append(curr_indel)
+    # leave off the last one. Append it after the loop finishes, but only if
+    # the current indel exists
+    if curr_indel:
+        agg_indel.append(curr_indel)
     return agg_indel
 
 
