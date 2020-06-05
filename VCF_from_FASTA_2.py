@@ -134,15 +134,13 @@ def collapse_indels(indels):
         # If the next position is not consecutive, append it and start over
         if ind_adj[0] - ind[0] > 1:
             agg_indel.append(curr_indel)
-            curr_indel = []
+            curr_indel = [ind_adj[0], adj_ref, adj_alt]
         else:
             curr_indel[1] += adj_ref
             curr_indel[2] += adj_alt
     # The way we are iterating through the indel list means that we will always
-    # leave off the last one. Append it after the loop finishes, but only if
-    # the current indel exists
-    if curr_indel:
-        agg_indel.append(curr_indel)
+    # leave off the last one. Append it after the loop finishes.
+    agg_indel.append(curr_indel)
     return agg_indel
 
 
