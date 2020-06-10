@@ -55,6 +55,40 @@ the resulting VCF that occur in the end-gap.\n""")
     return
 
 
+def check_columns(alignment, ref_idx=0):
+    """Check all of the columns of the alignment for those that are all gaps
+    or all N. Print a list of indices if it finds any."""
+    no_data = []
+    raw_aln = [list(s.seq) for s in alignment]
+    # Transpose it
+    t_aln = zip(*raw_aln)
+    refpos = 0
+    for index, column in enumerate(t_aln):
+        ref_base = column[ref_idx]
+        # Calculate the states that are present in this column
+        states = set([s.upper() for s in column])
+        # Throw out gaps and Ns
+        states.discard('-')
+        states.discard('N')
+        # If there are no states left, then we append it to the list
+        if len(states) == 0:
+            no_data.append((refpos, index))
+        if ref_base != '-':
+            refpos += 1
+    # Now, if no_data has values in it, then we will print them out here
+    if no_data:
+        message = """The following positions were found to be either all gaps
+or all N in your alignment:
+{refpos}
+in the reference sequence, or
+{alnpos}
+in the aligned sequences.\n""".format(
+            refpos=', '.join([str(i[0]) for i in no_data]),
+            alnpos=', '.join([str(i[1]) for i in no_data]))
+        sys.stderr.write(message)
+        sys.exit(2)
+    return
+
 def extract_variants(alignment, ref_idx=0):
     """Extract the positions of SNPs and indels in the Sanger reads aligned to
     the reference sequence."""
@@ -69,9 +103,11 @@ def extract_variants(alignment, ref_idx=0):
     # keep track of the reference base and only increment the position counter
     # for when we see a non-gap character in the reference sequence.
     offset = 0
-    for aln_column in t_raw_aln:
-        # First, get the states that exist at this position
-        states = set(aln_column)
+    for aln_pos, aln_column in enumerate(t_raw_aln):
+        # First, get the states that exist at this position. Transform them
+        # all to uppercase characters.
+        upper_col = [s.upper() for s in aln_column]
+        states = set(upper_col)
         # Discard any 'N' bases
         states.discard('N')
         # And get the ref state
@@ -81,7 +117,7 @@ def extract_variants(alignment, ref_idx=0):
         # If there is a gap in this position, then we will append it to the
         # list of indel positions
         if '-' in states:
-            indel_pos.append((offset, ref_state, alt_states))
+            indel_pos.append((offset, aln_pos, ref_state, alt_states))
         # Then, discard the gap character to look for SNPs
         states.discard('-')
         # If the length of the states is greater than 1, then we have a SNP
@@ -115,8 +151,8 @@ def extract_variants(alignment, ref_idx=0):
 def collapse_indels(indels):
     """Collapse indels by identifying runs of consecutive integers and merging
     those into a single entry."""
-    # Sort the indel bases by their coordinate
-    indel_srt = sorted(indels, key=lambda x: x[0])
+    # Sort the indel bases by their aligned position
+    indel_srt = sorted(indels, key=lambda x: x[1])
     # Make a list to hold our aggregated indels
     agg_indel = []
     # We will now iterate over adjacent records - if they are consecutive, then
@@ -125,19 +161,19 @@ def collapse_indels(indels):
     for ind, ind_adj in zip(indel_srt, indel_srt[1:]):
         # Unpack the alleles. It's a little silly, but we have to cast the set
         # to a list to subset it.
-        curr_ref = ind[1]
-        curr_alt = list(ind[2])[0]
-        adj_ref = ind_adj[1]
-        adj_alt = list(ind_adj[2])[0]
+        curr_ref = ind[2]
+        curr_alt = list(ind[3])[0]
+        adj_ref = ind_adj[2]
+        adj_alt = list(ind_adj[3])[0]
         if not curr_indel:
-            curr_indel = [ind[0], curr_ref, curr_alt]
+            curr_indel = [ind[0], ind[1], curr_ref, curr_alt]
         # If the next position is not consecutive, append it and start over
         if ind_adj[0] - ind[0] > 1:
             agg_indel.append(curr_indel)
-            curr_indel = [ind_adj[0], adj_ref, adj_alt]
+            curr_indel = [ind_adj[0], ind_adj[1], adj_ref, adj_alt]
         else:
-            curr_indel[1] += adj_ref
-            curr_indel[2] += adj_alt
+            curr_indel[2] += adj_ref
+            curr_indel[3] += adj_alt
     # The way we are iterating through the indel list means that we will always
     # leave off the last one. Append it after the loop finishes.
     agg_indel.append(curr_indel)
@@ -155,7 +191,7 @@ def adjust_indels(indels, alignment, ref_idx=0):
     for i in indels:
         spec_pos = i[0] - 1
         spec_ref = ref_seq[spec_pos]
-        spec_indel = [spec_pos, spec_ref + i[1], spec_ref + i[2]]
+        spec_indel = [spec_pos, spec_ref + i[2], spec_ref + i[3]]
         spec_indels.append(spec_indel)
     return spec_indels
 
@@ -187,7 +223,10 @@ def print_vcf(snp_var, ind_var, refseq, offset):
         # This is a bit of a hack, but if we have more than three fields, then
         # the variant type is a SNP
         if len(v) > 3:
-            v_ref = v[1]
+            # We also have to replace gap characters with N for the reference
+            # allele in the cases where a SNP occurs in a gapped part of the
+            # reference.
+            v_ref = v[1].replace('-', 'N')
             # A bit ugly, but we have to cast the alt alleles from set to list
             v_alt = ','.join(list(v[2]))
             v_info = ';'.join([
@@ -196,7 +235,7 @@ def print_vcf(snp_var, ind_var, refseq, offset):
                 'NS=' + str(v[3]),
                 'SNP'])
         else:
-            # For indels, replace the gap characters with N
+            # Replace the gap characters with N
             v_ref = v[1].replace('-', 'N')
             v_alt = v[2].replace('-', 'N')
             v_info = 'INDEL'
@@ -224,6 +263,8 @@ def main(fasta):
     # reference sequence, then we can't accurately calculate positions in the
     # alignment.
     check_ref_gaps(aln)
+    # Also check for aligned positions that are all N or all gaps
+    check_columns(aln)
     snps, indels = extract_variants(aln)
     # Next, we want to collapse indels. We can find these by identifying runs
     # of consecutive integers in the list of indels. Some of the variants that
