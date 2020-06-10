@@ -66,18 +66,18 @@ def check_columns(alignment, ref_idx=0):
     for index, column in enumerate(t_aln):
         ref_base = column[ref_idx]
         # Calculate the states that are present in this column
-        states = set([s.upper() for s in column])
+        states = {s.upper() for s in column}
         # Throw out gaps and Ns
         states.discard('-')
         states.discard('N')
         # If there are no states left, then we append it to the list
-        if len(states) == 0:
-            no_data.append((refpos, index))
+        if not states:
+            no_data.append((refpos+1, index+1))
         if ref_base != '-':
             refpos += 1
     # Now, if no_data has values in it, then we will print them out here
     if no_data:
-        message = """The following positions were found to be either all gaps
+        message = """The following positions (1-based) were found to be either all gaps
 or all N in your alignment:
 {refpos}
 in the reference sequence, or
